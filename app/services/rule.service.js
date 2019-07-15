@@ -3,7 +3,10 @@ const TYPES = require("tedious").TYPES;
 
 const getAll = () => {
   return mssql.executeProc("CalculationRule_SelectAll").then(response => {
-    return response.resultSets[0];
+    return response.resultSets[0].map(rule => {
+      rule.value = JSON.parse(rule.value);
+      return rule;
+    });
   });
 };
 
@@ -18,7 +21,9 @@ const getById = id => {
         response.resultSets[0] &&
         response.resultSets[0].length
       ) {
-        return response.resultSets[0][0];
+        const rule = response.resultSets[0][0];
+        rule.value = JSON.parse(rule.value);
+        return rule;
       }
       return null;
     });
@@ -30,7 +35,11 @@ const getByCalculationId = calculationId => {
       sqlRequest.addParameter("CalculationId", TYPES.Int, calculationId);
     })
     .then(response => {
-      return response.resultSets[0];
+      const rules = response.resultSets[0];
+      return rules.map(rule => {
+        rule.value = JSON.parse(rule.value);
+        return rule;
+      });
     });
 };
 
@@ -53,9 +62,14 @@ const post = item => {
       sqlRequest.addParameter("units", TYPES.VarChar, item.units, {
         length: 50
       });
-      sqlRequest.addParameter("value", TYPES.VarChar, item.value, {
-        length: 200
-      });
+      sqlRequest.addParameter(
+        "value",
+        TYPES.VarChar,
+        JSON.stringify(item.value),
+        {
+          length: 200
+        }
+      );
       sqlRequest.addParameter(
         "functionBody",
         TYPES.NVarChar,
@@ -90,9 +104,14 @@ const put = item => {
     sqlRequest.addParameter("units", TYPES.VarChar, item.units, {
       length: 50
     });
-    sqlRequest.addParameter("value", TYPES.VarChar, item.value, {
-      length: 200
-    });
+    sqlRequest.addParameter(
+      "value",
+      TYPES.VarChar,
+      JSON.stringify(item.value),
+      {
+        length: 200
+      }
+    );
     sqlRequest.addParameter("functionBody", TYPES.NVarChar, item.functionBody, {
       length: 2000
     });
